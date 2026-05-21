@@ -1,0 +1,237 @@
+-- =====================================================
+-- EXERCÍCIOS CREATE TABLE E INSERT
+-- =====================================================
+
+-- =====================================================
+-- 1) CRIAÇÃO DAS TABELAS
+-- =====================================================
+
+-- -----------------------------------------------------
+-- TABELA CIDADE
+-- Forma 1: PK definida ao final do CREATE TABLE
+-- -----------------------------------------------------
+
+CREATE TABLE cidade (
+    codigo INTEGER,
+    nome VARCHAR(100) NOT NULL,
+    uf CHAR(2),
+    regiao VARCHAR(50),
+
+    CONSTRAINT pk_cidade PRIMARY KEY (codigo)
+);
+
+-- -----------------------------------------------------
+-- TABELA CIDADE
+-- Forma 2: PK definida na mesma linha do atributo
+-- (DEIXAR COMENTADA)
+-- -----------------------------------------------------
+
+/*
+CREATE TABLE cidade (
+    codigo INTEGER CONSTRAINT pk_cidade PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    uf CHAR(2),
+    regiao VARCHAR(50)
+);
+*/
+
+-- -----------------------------------------------------
+-- TABELA PROFESSOR
+-- -----------------------------------------------------
+
+CREATE TABLE professor (
+    codigo INTEGER,
+    nome VARCHAR(100) NOT NULL,
+    RG VARCHAR(20) UNIQUE,
+    sexo CHAR(1) DEFAULT 'M',
+    codCid INTEGER,
+
+    CONSTRAINT pk_professor PRIMARY KEY (codigo),
+
+    CONSTRAINT fk_professor_cidade
+        FOREIGN KEY (codCid)
+        REFERENCES cidade(codigo),
+
+    CONSTRAINT ck_professor_sexo
+        CHECK (sexo IN ('F', 'M'))
+);
+
+-- -----------------------------------------------------
+-- TABELA ALUNO
+-- -----------------------------------------------------
+
+CREATE TABLE aluno (
+    codigo INTEGER,
+    nome VARCHAR(100) NOT NULL,
+    dtaNasc DATE,
+    sexo CHAR(1) DEFAULT 'M',
+    RG VARCHAR(20) UNIQUE,
+    codCid INTEGER,
+
+    CONSTRAINT pk_aluno PRIMARY KEY (codigo),
+
+    CONSTRAINT fk_aluno_cidade
+        FOREIGN KEY (codCid)
+        REFERENCES cidade(codigo),
+
+    CONSTRAINT ck_aluno_sexo
+        CHECK (sexo IN ('F', 'M'))
+);
+
+-- -----------------------------------------------------
+-- TABELA AULA
+-- -----------------------------------------------------
+
+CREATE TABLE aula (
+    codAlu INTEGER,
+    codProf INTEGER,
+    dtaInicio DATE,
+    dtaFim DATE,
+
+    CONSTRAINT pk_aula
+        PRIMARY KEY (codAlu, codProf, dtaInicio),
+
+    CONSTRAINT fk_aula_aluno
+        FOREIGN KEY (codAlu)
+        REFERENCES aluno(codigo),
+
+    CONSTRAINT fk_aula_professor
+        FOREIGN KEY (codProf)
+        REFERENCES professor(codigo)
+);
+
+-- -----------------------------------------------------
+-- TABELA RENDIMENTO
+-- -----------------------------------------------------
+
+CREATE TABLE rendimento (
+    codAlu INTEGER,
+    codProf INTEGER,
+    dtaInicio DATE,
+    observacoes VARCHAR(255),
+    aproveitamento VARCHAR(20) DEFAULT 'Bom',
+
+    CONSTRAINT pk_rendimento
+        PRIMARY KEY (codAlu, codProf, dtaInicio),
+
+    CONSTRAINT fk_rendimento_aula
+        FOREIGN KEY (codAlu, codProf, dtaInicio)
+        REFERENCES aula(codAlu, codProf, dtaInicio),
+
+    CONSTRAINT ck_aproveitamento
+        CHECK (aproveitamento IN ('Excelente', 'Bom', 'Ruim'))
+);
+
+-- =====================================================
+-- 2) ALTER TABLE
+-- =====================================================
+
+-- -----------------------------------------------------
+-- a) Adicionar coluna contato na tabela aluno
+-- -----------------------------------------------------
+
+ALTER TABLE aluno
+ADD contato VARCHAR(100);
+
+-- -----------------------------------------------------
+-- b) Alterar tabela cidade
+-- i) default SC na UF
+-- ii) deletar coluna regiao
+-- iii) adicionar regiao_nacional
+-- -----------------------------------------------------
+
+ALTER TABLE cidade
+    ALTER COLUMN uf SET DEFAULT 'SC';
+
+ALTER TABLE cidade
+    DROP COLUMN regiao;
+
+ALTER TABLE cidade
+    ADD regiao_nacional VARCHAR(50);
+
+-- =====================================================
+-- 3) INSERT DOS DADOS
+-- =====================================================
+
+-- -----------------------------------------------------
+-- INSERINDO CIDADES
+-- -----------------------------------------------------
+
+INSERT INTO cidade (codigo, nome, uf, regiao_nacional)
+VALUES
+(1, 'Florianopolis', 'SC', 'Sul'),
+(2, 'Curitiba', 'PR', 'Sul'),
+(3, 'Sao Paulo', 'SP', 'Sudeste');
+
+-- -----------------------------------------------------
+-- INSERINDO ALUNOS
+-- -----------------------------------------------------
+
+INSERT INTO aluno
+(codigo, nome, dtaNasc, sexo, RG, codCid, contato)
+VALUES
+(1, 'Joao Silva', '2000-05-10', 'M', '111111', 1, '99999-1111'),
+(2, 'Maria Souza', '2001-08-15', 'F', '222222', 2, '99999-2222');
+
+-- -----------------------------------------------------
+-- INSERINDO PROFESSORES
+-- -----------------------------------------------------
+
+INSERT INTO professor
+(codigo, nome, RG, sexo, codCid)
+VALUES
+(1, 'Carlos Mendes', '333333', 'M', 1),
+(2, 'Ana Lima', '444444', 'F', 3);
+
+-- -----------------------------------------------------
+-- INSERINDO AULAS
+-- -----------------------------------------------------
+
+INSERT INTO aula
+(codAlu, codProf, dtaInicio, dtaFim)
+VALUES
+(1, 1, '2026-05-01', '2026-06-01'),
+(2, 2, '2026-05-10', '2026-06-10');
+
+-- -----------------------------------------------------
+-- INSERINDO RENDIMENTOS
+-- -----------------------------------------------------
+
+INSERT INTO rendimento
+(codAlu, codProf, dtaInicio, observacoes, aproveitamento)
+VALUES
+(1, 1, '2026-05-01', 'Aluno com bom desempenho', 'Excelente'),
+(2, 2, '2026-05-10', 'Precisa melhorar participacao', 'Ruim');
+
+-- =====================================================
+-- VISUALIZAÇÃO DOS DADOS
+-- =====================================================
+
+SELECT * FROM cidade;
+
+SELECT * FROM aluno;
+
+SELECT * FROM professor;
+
+SELECT * FROM aula;
+
+SELECT * FROM rendimento;
+
+-- =====================================================
+-- 4) UPDATE E DELETE
+-- =====================================================
+
+-- -----------------------------------------------------
+-- a) Alterar UF de uma cidade
+-- -----------------------------------------------------
+
+UPDATE cidade
+SET uf = 'RS'
+WHERE codigo = 2;
+
+-- -----------------------------------------------------
+-- d) Deletar uma linha da tabela cidade
+-- -----------------------------------------------------
+
+DELETE FROM cidade
+WHERE codigo = 3;
